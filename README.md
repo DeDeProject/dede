@@ -1,6 +1,6 @@
 # DeDe
 
-We are the same as `cvxpy` except we require separate constraints input.
+DeDe is a general, scalable, and theoretically grounded framework that accelerates resource allocation through **decouple** and **decompose**.
 
 ## Hardware requirements
 - Linux OS
