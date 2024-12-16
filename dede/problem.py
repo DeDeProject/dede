@@ -7,6 +7,7 @@ from collections import defaultdict
 
 from cvxpy.problems.problem import Problem as CpProblem
 from cvxpy.constraints.zero import Zero, Equality
+from cvxpy.constraints.nonpos import Inequality
 from cvxpy.expressions.variable import Variable
 from cvxpy.problems.objective import Maximize, Minimize
 
@@ -46,14 +47,11 @@ class Problem(CpProblem):
             resource_variables: list of resource constraints
             demand_variables: list of demand constraints
         '''
-        self._constrs_r = resource_constraints
-        self._constrs_d = demand_constraints
+        self._constrs_r = [
+            self.convert_inequality(constr) for constr in resource_constraints]
+        self._constrs_d = [
+            self.convert_inequality(constr) for constr in demand_constraints]
         self._subprob_cache = SubprobCache()
-
-        # check equality between variables
-        for constr in self._constrs_r + self._constrs_d:
-            if not (isinstance(constr, Zero) or isinstance(constr, Equality)):
-                raise ValueError(f'Constraint {constr} is not equality.')
 
         # Initialize original problem
         super(Problem, self).__init__(
@@ -77,6 +75,15 @@ class Problem(CpProblem):
 
         # get objective groups
         self._obj_expr_r, self._obj_expr_d = self.group_objective()
+
+    def convert_inequality(self, constr):
+        if isinstance(constr, Zero) or isinstance(constr, Equality):
+            return constr
+        elif isinstance(constr, Inequality):
+            return constr.expr + cp.Variable(constr.shape, nonneg=True) == 0
+        else:
+            raise ValueError(
+                f'Constraint {constr} is neither equality nor inequality.')
 
     def solve(
             self, enable_dede=True, num_cpus=None, rho=None, num_iter=None,

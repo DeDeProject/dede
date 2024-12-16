@@ -31,8 +31,8 @@ N, M = 100, 100
 x = dd.Variable((N, M), nonneg=True)
 
 # Create the constraints.
-resource_constraints = [x[i,:].sum() == 1 for i in range(N)]
-demand_constraints = [x[:,j].sum() == 1 for j in range(M)]
+resource_constraints = [x[i,:].sum() >= i for i in range(N)]
+demand_constraints = [x[:,j].sum() <= j for j in range(M)]
 
 # Create an objective.
 objective = dd.Minimize(x.sum())
